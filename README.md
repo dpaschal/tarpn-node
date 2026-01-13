@@ -1,3 +1,6 @@
+> **Important:** This isn't the documentation or code that Tadd KA2DEW supervises. That code is at https://tarpn.net/
+> Technical support is available for the tarpn.net code and documentation at [tarpn@groups.io](https://groups.io/g/tarpn).
+
 # TARPN Node
 
 A modern, centralized repository for building TARPN (Terrestrial Amateur Radio Packet Network) nodes.

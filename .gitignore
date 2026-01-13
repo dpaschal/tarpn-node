@@ -1,0 +1,44 @@
+# OS files
+.DS_Store
+__MACOSX/
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Build artifacts
+*.img
+*.zip
+build/
+dist/
+site/
+
+# Logs
+*.log
+logs/
+
+# Backups
+*.bak
+*.backup
+backups/
+
+# Temporary files
+*.tmp
+tmp/
+
+# Local configuration (contains secrets)
+config/local/
+*.local.cfg
+
+# MkDocs build
+site/

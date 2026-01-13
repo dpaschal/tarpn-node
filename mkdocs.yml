@@ -1,0 +1,78 @@
+site_name: TARPN Node Documentation
+site_url: https://dpaschal.github.io/tarpn-node
+repo_url: https://github.com/dpaschal/tarpn-node
+repo_name: dpaschal/tarpn-node
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Hardware:
+    - Overview: hardware/overview.md
+    - Shopping List: hardware/shopping-list.md
+    - Raspberry Pi: hardware/raspberry-pi.md
+    - NinoTNC: hardware/ninotnc.md
+    - Radios: hardware/radios.md
+    - Antennas: hardware/antennas.md
+    - Power Supply: hardware/power.md
+    - Enclosure:
+      - Overview: hardware/enclosure/overview.md
+      - 3D Printed Build: hardware/enclosure/3d-printed.md
+      - Assembly Guide: hardware/enclosure/assembly.md
+  - Software:
+    - Installation: software/installation.md
+    - Configuration: software/configuration.md
+    - Command Reference: software/commands.md
+    - BPQ Configuration: software/bpq-config.md
+    - Troubleshooting: software/troubleshooting.md
+  - Network:
+    - Architecture: network/architecture.md
+    - Frequencies: network/frequencies.md
+    - Linking Nodes: network/linking.md
+    - Network Rules: network/rules.md
+  - Advanced:
+    - Building from Source: advanced/building-from-source.md
+    - Custom Images: advanced/custom-images.md
+    - Contributing: advanced/contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dpaschal/tarpn-node

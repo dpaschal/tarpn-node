@@ -1,0 +1,363 @@
+#!/bin/bash
+#
+# TARPN Node Management Command
+# https://github.com/dpaschal/tarpn-node
+#
+
+set -e
+
+TARPN_DIR="/opt/tarpn"
+LINBPQ_DIR="$TARPN_DIR/linbpq"
+VERSION="1.0.0"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Show usage
+usage() {
+    cat << EOF
+TARPN Node Management v$VERSION
+
+Usage: tarpn <command> [options]
+
+Commands:
+  (no command)     Show node status
+  config           Interactive node configuration
+  test             Run node interactively (for testing)
+  service          Manage background service (start|stop|restart|status)
+  home             Manage web interface (start|stop|status)
+  update           Update TARPN software
+  backup           Backup node configuration
+  restore          Restore from backup
+  linktest <port>  Test link quality on specified port
+  listen <port>    Monitor packets on specified port
+  log              View node logs
+  shell            Open BPQ command shell
+
+System:
+  shutdown         Safely shutdown the node
+  reboot           Safely reboot the node
+  info             Show system information
+
+EOF
+}
+
+# Check if BPQ is running
+is_running() {
+    pgrep -f "linbpq" > /dev/null 2>&1
+}
+
+# Show status
+status() {
+    echo -e "${BLUE}TARPN Node Status${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    if is_running; then
+        echo -e "BPQ Node: ${GREEN}RUNNING${NC}"
+        PID=$(pgrep -f "linbpq")
+        echo "  PID: $PID"
+        echo "  Uptime: $(ps -o etime= -p $PID | xargs)"
+    else
+        echo -e "BPQ Node: ${RED}NOT RUNNING${NC}"
+    fi
+
+    echo ""
+
+    # Show IP
+    IP=$(hostname -I | awk '{print $1}')
+    echo "Network:"
+    echo "  IP Address: $IP"
+    echo "  Web Interface: http://$IP:8080"
+
+    echo ""
+
+    # Show USB devices (TNCs)
+    echo "USB Devices:"
+    for dev in /dev/ttyUSB*; do
+        if [[ -e "$dev" ]]; then
+            echo "  $dev"
+        fi
+    done
+
+    if [[ ! -e /dev/ttyUSB0 ]]; then
+        echo -e "  ${YELLOW}No USB devices found${NC}"
+    fi
+}
+
+# Interactive configuration
+config() {
+    echo -e "${BLUE}TARPN Node Configuration${NC}"
+    echo ""
+
+    if is_running; then
+        echo -e "${YELLOW}Warning: Node is running. Stop it first with 'tarpn service stop'${NC}"
+        read -p "Stop node and continue? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            service_cmd stop
+        else
+            exit 1
+        fi
+    fi
+
+    CONFIG_FILE="$LINBPQ_DIR/bpq32.cfg"
+
+    # Backup existing config
+    if [[ -f "$CONFIG_FILE" ]]; then
+        cp "$CONFIG_FILE" "$CONFIG_FILE.bak.$(date +%Y%m%d_%H%M%S)"
+    fi
+
+    echo "Current configuration: $CONFIG_FILE"
+    echo ""
+
+    # Interactive prompts
+    read -p "Your callsign: " CALLSIGN
+    CALLSIGN=$(echo "$CALLSIGN" | tr '[:lower:]' '[:upper:]')
+
+    read -p "Node callsign (e.g., ${CALLSIGN}-2): " NODECALL
+    NODECALL=${NODECALL:-"${CALLSIGN}-2"}
+
+    read -p "Node name (6 chars max): " NODEALIAS
+    NODEALIAS=$(echo "$NODEALIAS" | tr '[:lower:]' '[:upper:]' | cut -c1-6)
+
+    read -p "BBS callsign (e.g., ${CALLSIGN}-1): " BBSCALL
+    BBSCALL=${BBSCALL:-"${CALLSIGN}-1"}
+
+    read -p "Grid locator (e.g., EM95): " LOCATOR
+
+    echo ""
+    echo "Configuration:"
+    echo "  Callsign: $CALLSIGN"
+    echo "  Node: $NODECALL ($NODEALIAS)"
+    echo "  BBS: $BBSCALL"
+    echo "  Locator: $LOCATOR"
+    echo ""
+
+    read -p "Save this configuration? [Y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        # Update config file
+        sed -i "s/NODECALL=.*/NODECALL=$NODECALL/" "$CONFIG_FILE"
+        sed -i "s/NODEALIAS=.*/NODEALIAS=$NODEALIAS/" "$CONFIG_FILE"
+        sed -i "s/LOCATOR=.*/LOCATOR=$LOCATOR/" "$CONFIG_FILE"
+        echo -e "${GREEN}Configuration saved${NC}"
+    fi
+}
+
+# Service management
+service_cmd() {
+    case "$1" in
+        start)
+            echo "Starting TARPN node..."
+            sudo systemctl start tarpn
+            sleep 2
+            if is_running; then
+                echo -e "${GREEN}Node started${NC}"
+            else
+                echo -e "${RED}Failed to start node${NC}"
+                exit 1
+            fi
+            ;;
+        stop)
+            echo "Stopping TARPN node..."
+            sudo systemctl stop tarpn
+            echo -e "${GREEN}Node stopped${NC}"
+            ;;
+        restart)
+            echo "Restarting TARPN node..."
+            sudo systemctl restart tarpn
+            sleep 2
+            if is_running; then
+                echo -e "${GREEN}Node restarted${NC}"
+            else
+                echo -e "${RED}Failed to restart node${NC}"
+                exit 1
+            fi
+            ;;
+        status)
+            sudo systemctl status tarpn
+            ;;
+        *)
+            echo "Usage: tarpn service [start|stop|restart|status]"
+            ;;
+    esac
+}
+
+# Run interactive test
+test_node() {
+    echo -e "${BLUE}Running node in interactive mode...${NC}"
+    echo "Press Ctrl+C to stop"
+    echo ""
+
+    cd "$LINBPQ_DIR"
+    ./linbpq
+}
+
+# Update TARPN
+update() {
+    echo -e "${BLUE}Updating TARPN...${NC}"
+
+    cd "$TARPN_DIR"
+    git pull
+
+    echo -e "${GREEN}Update complete${NC}"
+    echo "Restart the node with 'tarpn service restart' to apply changes"
+}
+
+# Backup
+backup() {
+    BACKUP_DIR="$TARPN_DIR/backups"
+    BACKUP_FILE="$BACKUP_DIR/tarpn-backup-$(date +%Y%m%d_%H%M%S).tar.gz"
+
+    mkdir -p "$BACKUP_DIR"
+
+    echo "Creating backup..."
+
+    tar -czf "$BACKUP_FILE" \
+        -C "$LINBPQ_DIR" \
+        bpq32.cfg \
+        linmail.cfg \
+        chatconfig.cfg \
+        2>/dev/null || true
+
+    echo -e "${GREEN}Backup saved: $BACKUP_FILE${NC}"
+}
+
+# View logs
+view_log() {
+    if [[ -d "$LINBPQ_DIR/Logs" ]]; then
+        LOG=$(ls -t "$LINBPQ_DIR/Logs"/*.log 2>/dev/null | head -1)
+        if [[ -n "$LOG" ]]; then
+            tail -f "$LOG"
+        else
+            echo "No log files found"
+        fi
+    else
+        echo "Log directory not found"
+    fi
+}
+
+# System info
+sysinfo() {
+    echo -e "${BLUE}System Information${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    echo "Hostname: $(hostname)"
+    echo "IP: $(hostname -I | awk '{print $1}')"
+    echo "Uptime: $(uptime -p)"
+    echo ""
+
+    echo "CPU:"
+    grep "model name" /proc/cpuinfo | head -1 | cut -d: -f2 | xargs
+    echo "  Load: $(cat /proc/loadavg | awk '{print $1, $2, $3}')"
+    echo ""
+
+    echo "Memory:"
+    free -h | grep Mem | awk '{print "  Total: "$2"  Used: "$3"  Free: "$4}'
+    echo ""
+
+    echo "Disk:"
+    df -h / | tail -1 | awk '{print "  Total: "$2"  Used: "$3"  Free: "$4" ("$5" used)"}'
+    echo ""
+
+    echo "Temperature:"
+    if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+        TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
+        echo "  CPU: $((TEMP/1000))°C"
+    else
+        echo "  N/A"
+    fi
+}
+
+# Safe shutdown
+shutdown_node() {
+    echo -e "${YELLOW}Shutting down TARPN node...${NC}"
+
+    if is_running; then
+        service_cmd stop
+    fi
+
+    sync
+    echo "System will shutdown in 5 seconds..."
+    sleep 5
+    sudo shutdown -h now
+}
+
+# Safe reboot
+reboot_node() {
+    echo -e "${YELLOW}Rebooting TARPN node...${NC}"
+
+    if is_running; then
+        service_cmd stop
+    fi
+
+    sync
+    echo "System will reboot in 5 seconds..."
+    sleep 5
+    sudo reboot
+}
+
+# Main command handler
+case "${1:-}" in
+    "")
+        status
+        ;;
+    config)
+        config
+        ;;
+    test)
+        test_node
+        ;;
+    service)
+        service_cmd "$2"
+        ;;
+    home)
+        # TODO: Implement TARPN-HOME management
+        echo "TARPN-HOME management not yet implemented"
+        ;;
+    update)
+        update
+        ;;
+    backup)
+        backup
+        ;;
+    restore)
+        # TODO: Implement restore
+        echo "Restore not yet implemented"
+        ;;
+    linktest)
+        # TODO: Implement linktest
+        echo "Link test not yet implemented"
+        ;;
+    listen)
+        # TODO: Implement listen
+        echo "Listen not yet implemented"
+        ;;
+    log)
+        view_log
+        ;;
+    shell)
+        telnet localhost 8010
+        ;;
+    shutdown)
+        shutdown_node
+        ;;
+    reboot)
+        reboot_node
+        ;;
+    info)
+        sysinfo
+        ;;
+    help|--help|-h)
+        usage
+        ;;
+    *)
+        echo "Unknown command: $1"
+        usage
+        exit 1
+        ;;
+esac

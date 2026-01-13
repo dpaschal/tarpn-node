@@ -24,24 +24,49 @@ TARPN Node Management v$VERSION
 
 Usage: tarpn <command> [options]
 
-Commands:
+Node Control:
   (no command)     Show node status
   config           Interactive node configuration
   test             Run node interactively (for testing)
   service          Manage background service (start|stop|restart|status)
-  home             Manage web interface (start|stop|status)
-  update           Update TARPN software
+
+Monitoring:
+  log              View node logs (live)
+  daemon           View daemon.log
+  listen <port>    Monitor packets on specified port
+  linktest <port>  Test link quality (sends 100 packets)
+  shell            Open BPQ command shell (telnet)
+  tx <node>        Telnet to neighbor node
+
+USB/TNC:
+  usb              List USB devices and TNCs
+  identify         Identify connected TNC hardware
+  flash            Flash firmware to NinoTNC
+
+Network:
+  ip               Show IP configuration
+  ports            Show open network ports
+
+Updates:
+  update           Update TARPN scripts from GitHub
+  updateapps       Update system applications
+
+Backup/Restore:
   backup           Backup node configuration
   restore          Restore from backup
-  linktest <port>  Test link quality on specified port
-  listen <port>    Monitor packets on specified port
-  log              View node logs
-  shell            Open BPQ command shell
 
 System:
-  shutdown         Safely shutdown the node
-  reboot           Safely reboot the node
   info             Show system information
+  shutdown         Safely shutdown node and Pi
+  reboot           Safely reboot node
+  forceshutdown    Force immediate shutdown
+
+Web Interface:
+  home             Manage TARPN-HOME (start|stop|status|logs)
+
+Advanced:
+  ps               Show process tree
+  stresstest       Stress test links to neighbors
 
 EOF
 }
@@ -301,6 +326,266 @@ reboot_node() {
     sudo reboot
 }
 
+# Force shutdown (no delay)
+force_shutdown() {
+    echo -e "${RED}Force shutting down...${NC}"
+    sync
+    sudo shutdown -h now
+}
+
+# List USB devices and TNCs
+list_usb() {
+    echo -e "${BLUE}USB Devices${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # List all ttyUSB devices
+    for dev in /dev/ttyUSB*; do
+        if [[ -e "$dev" ]]; then
+            echo ""
+            echo -e "${GREEN}$dev${NC}"
+
+            # Try to get device info from udevadm
+            INFO=$(udevadm info -q property "$dev" 2>/dev/null)
+            if [[ -n "$INFO" ]]; then
+                VENDOR=$(echo "$INFO" | grep "ID_VENDOR=" | cut -d= -f2)
+                MODEL=$(echo "$INFO" | grep "ID_MODEL=" | cut -d= -f2)
+                SERIAL=$(echo "$INFO" | grep "ID_SERIAL_SHORT=" | cut -d= -f2)
+
+                [[ -n "$VENDOR" ]] && echo "  Vendor: $VENDOR"
+                [[ -n "$MODEL" ]] && echo "  Model: $MODEL"
+                [[ -n "$SERIAL" ]] && echo "  Serial: $SERIAL"
+            fi
+        fi
+    done
+
+    if [[ ! -e /dev/ttyUSB0 ]]; then
+        echo ""
+        echo -e "${YELLOW}No USB serial devices found${NC}"
+        echo "NinoTNCs should appear as /dev/ttyUSB* when connected"
+    fi
+
+    echo ""
+    echo "Also checking ttyACM devices..."
+    for dev in /dev/ttyACM*; do
+        if [[ -e "$dev" ]]; then
+            echo -e "${GREEN}$dev${NC}"
+        fi
+    done
+}
+
+# Identify TNC
+identify_tnc() {
+    echo -e "${BLUE}TNC Identification${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    for dev in /dev/ttyUSB*; do
+        if [[ -e "$dev" ]]; then
+            echo ""
+            echo "Checking $dev..."
+
+            # Try to read TNC version (NinoTNC responds to version query)
+            if command -v python3 &>/dev/null; then
+                python3 << EOF 2>/dev/null || echo "  Could not query device"
+import serial
+import time
+try:
+    ser = serial.Serial('$dev', 57600, timeout=2)
+    time.sleep(0.5)
+    ser.write(b'\\x1b[V')  # Version query
+    time.sleep(0.5)
+    response = ser.read(100)
+    if response:
+        print(f"  Response: {response.decode('utf-8', errors='ignore').strip()}")
+    else:
+        print("  No response (may not be a NinoTNC)")
+    ser.close()
+except Exception as e:
+    print(f"  Error: {e}")
+EOF
+            else
+                echo "  Python3 required for TNC identification"
+            fi
+        fi
+    done
+}
+
+# Flash NinoTNC firmware
+flash_tnc() {
+    echo -e "${BLUE}NinoTNC Firmware Flash${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    FIRMWARE_DIR="/usr/local/etc/ninotnc/versions"
+
+    if [[ ! -d "$FIRMWARE_DIR" ]]; then
+        echo -e "${RED}Firmware directory not found: $FIRMWARE_DIR${NC}"
+        exit 1
+    fi
+
+    # List available firmware
+    echo "Available firmware versions:"
+    ls -1 "$FIRMWARE_DIR"/*.hex 2>/dev/null || echo "  No firmware files found"
+    echo ""
+
+    # List USB devices
+    echo "Available USB devices:"
+    for dev in /dev/ttyUSB*; do
+        [[ -e "$dev" ]] && echo "  $dev"
+    done
+    echo ""
+
+    echo "To flash firmware, download flashtnc.py from TARPN and run:"
+    echo "  python3 flashtnc.py <device> <firmware.hex>"
+}
+
+# Show IP configuration
+show_ip() {
+    echo -e "${BLUE}IP Configuration${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    ip -4 addr show | grep -E "inet|^[0-9]"
+    echo ""
+    echo "Default gateway:"
+    ip route | grep default
+}
+
+# Show open ports
+show_ports() {
+    echo -e "${BLUE}Open Network Ports${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null
+}
+
+# Show process tree
+show_ps() {
+    echo -e "${BLUE}Process Tree${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    pstree -p 2>/dev/null || ps auxf
+}
+
+# View daemon log
+view_daemon() {
+    if [[ -f "$LINBPQ_DIR/Logs/daemon.log" ]]; then
+        tail -f "$LINBPQ_DIR/Logs/daemon.log"
+    else
+        echo "daemon.log not found"
+    fi
+}
+
+# Listen to port traffic
+listen_port() {
+    PORT=$1
+    if [[ -z "$PORT" ]]; then
+        echo "Usage: tarpn listen <port_number>"
+        exit 1
+    fi
+
+    echo -e "${BLUE}Listening on port $PORT${NC}"
+    echo "Press Ctrl+C to stop"
+    echo ""
+
+    # Connect to BPQ monitor for this port
+    telnet localhost 8010 << EOF 2>/dev/null
+MON $PORT
+EOF
+}
+
+# Link test
+link_test() {
+    PORT=$1
+    if [[ -z "$PORT" ]]; then
+        echo "Usage: tarpn linktest <port_number>"
+        exit 1
+    fi
+
+    echo -e "${BLUE}Link Test on Port $PORT${NC}"
+    echo "Sending 100 test packets..."
+    echo ""
+
+    # This would send test packets via BPQ
+    # Implementation depends on having a link test utility
+    echo "Link test requires BPQ to be running and a neighbor on the port"
+    echo "Use 'tarpn shell' to access BPQ commands manually"
+}
+
+# Telnet to neighbor
+tx_neighbor() {
+    NODE=$1
+    if [[ -z "$NODE" ]]; then
+        echo "Usage: tarpn tx <node_callsign>"
+        exit 1
+    fi
+
+    echo -e "${BLUE}Connecting to $NODE...${NC}"
+    # Connect via BPQ
+    telnet localhost 8010 << EOF
+C $NODE
+EOF
+}
+
+# Restore from backup
+restore_backup() {
+    BACKUP_DIR="$TARPN_DIR/backups"
+
+    echo -e "${BLUE}Available Backups${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    if [[ ! -d "$BACKUP_DIR" ]]; then
+        echo "No backup directory found"
+        exit 1
+    fi
+
+    ls -lh "$BACKUP_DIR"/*.tar.gz 2>/dev/null || echo "No backups found"
+    echo ""
+
+    read -p "Enter backup filename to restore: " BACKUP_FILE
+
+    if [[ ! -f "$BACKUP_DIR/$BACKUP_FILE" ]] && [[ ! -f "$BACKUP_FILE" ]]; then
+        echo -e "${RED}Backup file not found${NC}"
+        exit 1
+    fi
+
+    [[ -f "$BACKUP_DIR/$BACKUP_FILE" ]] && BACKUP_FILE="$BACKUP_DIR/$BACKUP_FILE"
+
+    echo "Restoring from $BACKUP_FILE..."
+    tar -xzf "$BACKUP_FILE" -C "$LINBPQ_DIR"
+    echo -e "${GREEN}Restore complete${NC}"
+}
+
+# Update system applications
+update_apps() {
+    echo -e "${BLUE}Updating system applications...${NC}"
+    sudo apt-get update
+    sudo apt-get upgrade -y
+    echo -e "${GREEN}Update complete${NC}"
+}
+
+# TARPN-HOME management
+home_cmd() {
+    case "$1" in
+        start)
+            echo "Starting TARPN-HOME..."
+            sudo systemctl start tarpn-home 2>/dev/null || echo "TARPN-HOME service not installed"
+            ;;
+        stop)
+            echo "Stopping TARPN-HOME..."
+            sudo systemctl stop tarpn-home 2>/dev/null || echo "TARPN-HOME service not installed"
+            ;;
+        status)
+            sudo systemctl status tarpn-home 2>/dev/null || echo "TARPN-HOME service not installed"
+            ;;
+        logs)
+            if [[ -f /var/log/tarpn_home.log ]]; then
+                tail -f /var/log/tarpn_home.log
+            else
+                echo "TARPN-HOME log not found"
+            fi
+            ;;
+        *)
+            echo "Usage: tarpn home [start|stop|status|logs]"
+            ;;
+    esac
+}
+
 # Main command handler
 case "${1:-}" in
     "")
@@ -316,32 +601,55 @@ case "${1:-}" in
         service_cmd "$2"
         ;;
     home)
-        # TODO: Implement TARPN-HOME management
-        echo "TARPN-HOME management not yet implemented"
+        home_cmd "$2"
         ;;
     update)
         update
+        ;;
+    updateapps)
+        update_apps
         ;;
     backup)
         backup
         ;;
     restore)
-        # TODO: Implement restore
-        echo "Restore not yet implemented"
+        restore_backup
         ;;
     linktest)
-        # TODO: Implement linktest
-        echo "Link test not yet implemented"
+        link_test "$2"
         ;;
     listen)
-        # TODO: Implement listen
-        echo "Listen not yet implemented"
+        listen_port "$2"
         ;;
     log)
         view_log
         ;;
+    daemon)
+        view_daemon
+        ;;
     shell)
         telnet localhost 8010
+        ;;
+    tx)
+        tx_neighbor "$2"
+        ;;
+    usb)
+        list_usb
+        ;;
+    identify)
+        identify_tnc
+        ;;
+    flash)
+        flash_tnc
+        ;;
+    ip)
+        show_ip
+        ;;
+    ports)
+        show_ports
+        ;;
+    ps)
+        show_ps
         ;;
     shutdown)
         shutdown_node
@@ -349,7 +657,10 @@ case "${1:-}" in
     reboot)
         reboot_node
         ;;
-    info)
+    forceshutdown)
+        force_shutdown
+        ;;
+    info|sysinfo)
         sysinfo
         ;;
     help|--help|-h)

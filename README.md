@@ -5,6 +5,8 @@ A modern, centralized repository for building TARPN (Terrestrial Amateur Radio P
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://dpaschal.github.io/tarpn-node)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+> **Note:** Documentation is actively being developed. Core scripts and STL files are ready for use. Some documentation pages contain placeholder content marked "Documentation In Progress".
+
 ## What is TARPN?
 
 TARPN is an off-grid amateur radio social network that operates entirely over ham radio infrastructure - no internet required. It enables multi-state email, live chat, and social interaction using dedicated point-to-point VHF/UHF radio links.

@@ -2,80 +2,84 @@
 
 3D printable enclosure for a TARPN node with dual radios and dual NinoTNCs.
 
-**Design Version:** 2025-09-13
+**Design:** Tadd Torborg (KA2DEW)
+**Version:** 2025-09-13
 
-## Parts List
+## Print Quantities
+
+Based on the official assembly instructions, print the following quantities:
 
 ### Structural Components
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `corner-tower-T2025may01-1.stl` | 4 | Main corner posts |
-| `beam-2025apr25-1.stl` | 4+ | Horizontal beams |
-| `foot-jul15-1.stl` | 4 | Rubber foot mounts |
+| Qty | File | Description |
+|-----|------|-------------|
+| 16 | `beam-2025apr25-1.stl` | Horizontal beams |
+| 16 | `corner-tower-T2025may01-1.stl` | Corner posts |
+| 4 | `foot-jul15-1.stl` | Rubber foot mounts |
 
-### Panels
+### Bottom Panels
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `full-panel-jul10-2.stl` | - | Full-width panel |
-| `left-half-panel-jul12-2.stl` | 1 | Left side half-panel |
-| `right-half-panel-aug01-2.stl` | 1 | Right side half-panel |
-| `right-half-with-vent-holes-25feb25-7.stl` | 1 | Vented right panel |
-| `side-panel-jul09-1.stl` | 2 | Side panels |
-| `bottom-panel-stephen-2024sep05-1.stl` | 1 | Bottom panel |
-| `bottom-panel-key.stl` | 1 | Bottom panel key/lock |
-| `hinged-200mm-panel-2025may23-1.stl` | 1 | Hinged access panel |
-| `blank-right-hand-front-plate-2024jul05-1.stl` | 1 | Blank front plate |
+| Qty | File | Description |
+|-----|------|-------------|
+| 4 | `bottom-panel-stephen-2024sep05-1.stl` | Bottom panels |
+| 4 | `bottom-panel-key.stl` | Bottom panel locks |
+
+### Side Panels
+
+| Qty | File | Description |
+|-----|------|-------------|
+| 11 | `side-panel-jul09-1.stl` | Side panels |
+| 1 | `right-half-with-vent-holes-25feb25-7.stl` | Vented right panel |
+| 1 | `hinged-200mm-panel-2025may23-1.stl` | Hinged access panel |
 
 ### Roof Components
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `roof-corner-25jan03-1.stl` | 4 | Roof corner pieces |
-| `roof-edge-beam-25jan04-2.stl` | 4 | Roof edge beams |
-| `roof-quadrant-25jan05-1.stl` | 4 | Roof quadrant panels |
+| Qty | File | Description |
+|-----|------|-------------|
+| 4 | `roof-corner-25jan03-1.stl` | Roof corner pieces |
+| 4 | `roof-edge-beam-25jan04-2.stl` | Roof edge beams |
+| 4 | `roof-quadrant-25jan05-1.stl` | Roof quadrant panels |
 
 ### NinoTNC Mounting
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `ninotnc-panel-jul15-2.stl` | 2 | TNC front panel |
-| `ninotnc-tray-handle-2025apr28-2.stl` | 2 | TNC tray handle |
-| `ninotnc-vertical-a4-tray-2025apr30-1.stl` | 2 | Vertical TNC tray |
+| Qty | File | Description |
+|-----|------|-------------|
+| 4 | `ninotnc-panel-jul15-2.stl` | TNC front panel |
+| 4 | `ninotnc-tray-handle-2025apr28-2.stl` | TNC tray handle |
+| 4 | `ninotnc-vertical-a4-tray-2025apr30-1.stl` | Vertical TNC tray |
 
 ### Power & Control
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `control-panel-25may27-2.stl` | 1 | Main control panel |
-| `power-supply-panel-25feb01-1.stl` | 1 | Power supply panel |
-| `power-supply-support-2025mar21-3.stl` | 1 | Power supply bracket |
-| `fuse-holder-2025apr12-2.stl` | 1+ | Fuse holder mount |
-| `battery-jan02-1.stl` | 1 | Battery holder |
+| Qty | File | Description |
+|-----|------|-------------|
+| 1 | `control-panel-25may27-2.stl` | Main control panel |
+| 1 | `power-supply-panel-25feb01-1.stl` | Power supply panel |
+| 1 | `power-supply-support-2025mar21-3.stl` | Power supply bracket |
+| 1 | `fuse-holder-2025apr12-2.stl` | Fuse holder mount |
+| 1 | `battery-jan02-1.stl` | Battery holder |
 
 ### I/O Cutouts
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `ethernet-socket-july30-1.stl` | 1 | Ethernet port cutout |
-| `hdmi-and-usb-big-socket-hole-2025apr03-1.stl` | 1 | HDMI/USB cutout |
-| `coax-hole-53mm-25jan02-1.stl` | 2+ | Coax feedthrough (53mm) |
-| `vented-53mm-jul16-1.stl` | - | Vented 53mm hole |
+| Qty | File | Description |
+|-----|------|-------------|
+| 1 | `ethernet-socket-july30-1.stl` | Ethernet port cutout |
+| 1 | `hdmi-and-usb-big-socket-hole-2025apr03-1.stl` | HDMI/USB cutout |
+| 4 | `coax-hole-53mm-25jan02-1.stl` | Coax feedthrough (53mm) |
+| 6 | `vented-53mm-jul16-1.stl` | Vented 53mm hole |
 
-### Radio Mounts
+### Radio Mounts (Choose Based on Your Radios)
 
-| File | Qty | Description |
-|------|-----|-------------|
-| `tait-radio-25jan03-1.stl` | - | Tait radio mount |
-| `vertex_Mount_20250421-1.stl` | - | Vertex radio mount |
-| `yeasu-ftm3100r-2025apr12-1.stl` | - | Yaesu FTM-3100R mount |
+| Qty | File | Description |
+|-----|------|-------------|
+| 4 | `tait-radio-25jan03-1.stl` | Tait radio mount |
+| as needed | `vertex_Mount_20250421-1.stl` | Vertex radio mount |
+| as needed | `yeasu-ftm3100r-2025apr12-1.stl` | Yaesu FTM-3100R mount |
 
 ### Tools
 
-| File | Description |
-|------|-------------|
-| `nut-placer-in-beam-2025mar16-1.stl` | Tool for inserting nuts into beams |
+| Qty | File | Description |
+|-----|------|-------------|
+| 1 | `nut-placer-in-beam-2025mar16-1.stl` | Tool for inserting nuts into beams |
 
 ### Multi-Part Files
 
@@ -86,35 +90,47 @@
 ## Print Settings
 
 **Recommended:**
-- **Material:** PLA or PETG
-- **Layer Height:** 0.2mm
-- **Infill:** 20-30%
-- **Walls:** 3 perimeters
-- **Top/Bottom:** 4 layers
+
+| Setting | Value |
+|---------|-------|
+| Material | PLA or PETG |
+| Layer Height | 0.2mm |
+| Infill | 20-30% |
+| Walls | 3 perimeters |
+| Top/Bottom | 4 layers |
 
 **Per-Part Notes:**
-- Structural parts (corners, beams): 30% infill for strength
-- Panels: 20% infill is sufficient
-- Radio mounts: PETG preferred for heat resistance
+
+- **Structural parts** (corners, beams): 30% infill for strength
+- **Panels**: 20% infill is sufficient
+- **Radio mounts**: PETG preferred for heat resistance near radios
 
 ## Hardware Required
 
-- M3 x 8mm screws (qty: ~50)
-- M3 nuts (qty: ~30)
-- M3 heat-set inserts (optional, for reusable joints)
-- M4 screws for radio mounting
+- M3 x 10mm screws (qty: ~50)
+- M3 x 35mm screws (qty: 4)
+- M3 square nuts (qty: ~60)
+- 2.5mm hex driver
 
-## Assembly Order
+## Total Print Summary
 
-1. Print and assemble corner towers with beams (frame)
-2. Add feet to bottom corners
-3. Install bottom panel
-4. Mount power supply bracket
-5. Install side panels
-6. Mount NinoTNC trays
-7. Install radio mounts
-8. Add I/O cutouts and panels
-9. Install roof components
-10. Add control panel last
+| Category | Part Count | Est. Print Time |
+|----------|------------|-----------------|
+| Structural | 36 parts | ~20 hours |
+| Panels | 16 parts | ~15 hours |
+| Roof | 12 parts | ~8 hours |
+| NinoTNC | 12 parts | ~6 hours |
+| Power/Control | 5 parts | ~4 hours |
+| I/O | 12 parts | ~3 hours |
+| Radio Mounts | 4 parts | ~2 hours |
+| **Total** | **~97 parts** | **~58 hours** |
 
-See [Assembly Guide](../../../docs/hardware/enclosure/assembly.md) for detailed instructions.
+*Print times estimated at 60mm/s with 0.2mm layer height*
+
+## Assembly
+
+See [Assembly Guide](../../../docs/hardware/enclosure/assembly.md) for detailed step-by-step instructions with photos.
+
+## Credits
+
+Enclosure designed by Tadd Torborg (KA2DEW) for the TARPN project.

@@ -3,6 +3,27 @@
 
 # TARPN Node
 
+<p align="center">
+  <a href="https://buymeacoffee.com/dpaschal">
+    <img src="https://img.shields.io/badge/❤️🎆_THANKS!_🎆❤️-Support_This_Project-ff0000?style=for-the-badge" alt="Thanks!" height="40">
+  </a>
+</p>
+
+<p align="center">
+  <b>☕ Buy me Claude Code credits or support a project! ☕</b>
+</p>
+<p align="center">
+  <i>Every donation keeps the code flowing — these tools are built with your support.</i>
+</p>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/dpaschal">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-red.png" alt="Buy Me A Coffee" height="50">
+  </a>
+</p>
+
+---
+
 A modern, centralized repository for building TARPN (Terrestrial Amateur Radio Packet Network) nodes.
 
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://dpaschal.github.io/tarpn-node)
